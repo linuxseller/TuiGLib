@@ -8,7 +8,7 @@ int main(void){
     float dvdvely = 0.5;
     tg_InitScreen(70, 15);
     tg_SetFPS(30);
-    while(!tg_ShouldExit()){
+    while(1){
         if(dvdx+3>tg_GetScreenWidth() || dvdx<0){
             dvdvelx = -dvdvelx;
         }
@@ -23,5 +23,4 @@ int main(void){
             tg_DrawText("DvD", dvdx, dvdy);
         tg_EndDraw();
     }
-    tg_Exit();
 }

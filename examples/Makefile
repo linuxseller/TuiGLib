@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wextra -Werror -pedantic
-CLIBS=-L. -L.. -I. -I.. -lm -lncurses
+CLIBS=-L.  -I. -lm -lncurses
 CC=clang
 
 all: PiCalcb DvDb

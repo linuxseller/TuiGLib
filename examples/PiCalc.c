@@ -1,12 +1,10 @@
 #include <stdlib.h>
-#define TUIG_IMPLEMEBTATION
+#define TUIG_IMPLEMENTATION
 #include "tuig.h"
-#define A
 
 #define SMAL_M_DEF 1
 #define BIG_M_DEF 100
 #define BIG_V_DEF -1
-
 
 typedef struct Entity {
     Rectangle rec;
@@ -14,10 +12,10 @@ typedef struct Entity {
     int vely;
 } Entity;
 
-int random_int(int min, int max)
-{
+int random_int(int min, int max){
    return min + rand() % (max+1 - min);
 }
+
 int main(void){
     int32_t screenWidth = 70;
     int32_t screenHeight = 15;
@@ -38,7 +36,7 @@ int main(void){
     char coll_str[15];
     char bbvels[30];
     char sbvels[30];
-    while(1){
+    while(!tg_ShouldExit()){
         size_unit = tg_GetScreenHeight()*0.1;
         // ground prop update
         ground.y = tg_GetScreenHeight()-2;
@@ -79,7 +77,7 @@ int main(void){
 
 
     }
-    //tg_DeInit(1);
+    tg_Exit();
     return 0;
 }
 
