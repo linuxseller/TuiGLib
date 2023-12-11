@@ -16,7 +16,7 @@ $ make
 
 ```c
 // DvD logo jumping around
-#define TUIG_IMPLEMEBTATION 
+#define TUIG_IMPLEMENTATION 
 #include "tuig.h"
 
 int main(void){
@@ -26,7 +26,7 @@ int main(void){
     float dvdvely = 0.5;
     tg_InitScreen(70, 15);
     tg_SetFPS(30);
-    while(1){
+    while(!tg_ShouldExit()){
         if(dvdx+3>tg_GetScreenWidth() || dvdx<0){
             dvdvelx = -dvdvelx;
         }
@@ -41,7 +41,7 @@ int main(void){
             tg_DrawText("DvD", dvdx, dvdy);
         tg_EndDraw();
     }
-    return 0;
+    tg_Exit();
 }
 ```
 
