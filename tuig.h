@@ -7,19 +7,6 @@
  *  #include "tuig.h"
  *  ```
  *
- *  screen - outputed chars
- *  buffer - data stiored in memory
- *
- *  Library Structture
- *  +- Screen structure contains
- *  |  +- Output scren size (width, height)
- *  |  +- Pointer to a buffer, of integers needed to configure screendrawing
- *  |
- *  +- Game structure contains
- *     +- Game fps that set by tg_SetFPS() proc
- *     +- Actual fps of game (limited by IO delays, game loop slow down etc)
- *  
- *
  *  How Does It work?
 */
 
@@ -71,6 +58,7 @@ typedef struct Game {
 void tg_InitScreen(int32_t width, int32_t height); // Initialising library
 void tg_SetFPS(float fps); // Set FPS program will slow up to
 float tg_GetFPS(void); // Get actual FPS
+unsigned char tg_GetKeyPressed(void);
 void tg_EndDraw(void); // Ends draw
 void tg_BeginDraw(void); // Begins draw
 void tg_ClearScreen(void); // Empties draw buffer
@@ -85,11 +73,13 @@ float tg_GetScreenWidth(void);
 bool tg_ShouldExit(void);
 bool tg_Exit(void);
 
+
+
 #ifdef TUIG_IMPLEMENTATION
 Screen screen;
 Game game;
 WINDOW *tg_win;
-
+int input_key;
 void tg_InitScreen(int32_t width, int32_t height){
     tg_win = initscr(); // ncurses init
     nonl();
@@ -147,6 +137,9 @@ void tg_EndDraw(void){
 float tg_GetScreenHeight(void){return screen.height; }
 float tg_GetScreenWidth(void){return screen.width; }
 
+unsigned char tg_GetKeyPressed(void){
+    return (input_key==ERR)?0:(char)input_key;
+}
 
 void tg_ClearScreen(void){
     for(uint32_t i=0; i<screen.width*screen.height; i++){
@@ -156,7 +149,8 @@ void tg_ClearScreen(void){
 }
 
 bool tg_ShouldExit(void){
-    return getch()=='q';
+    input_key = getch();
+    return input_key=='q';
 }
 
 bool tg_Exit(void){
