@@ -3,7 +3,7 @@
  *
  *  USAGE:
  *  ```
- *  #define TUIG_IMPLEMEBTATION
+ *  #define TUIG_IMPLEMENTATION
  *  #include "tuig.h"
  *  ```
  *
