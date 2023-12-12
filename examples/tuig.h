@@ -16,37 +16,11 @@
  *  |  +- Pointer to a buffer, of integers needed to configure screendrawing
  *  |
  *  +- Game structure contains
- *  |  +- Game fps that set by tg_SetFPS() proc
- *  |  +- Actual fps of game (limited by IO delays, game loop slow down etc)
- *  |
- *  +- Functions such as
- *  |  +- tg_InitScreen(int32_t width, int32_t height) : sets up buffer, game struct and inits Ncurses
- *  |  +- tg_SetFPS(float fps) : sets expectes fps
- *  |  +- tg_GetFPS : returns actual fps
- *  |  +- tg_BeginDraw : does not do anything
- *  |  +- tg_EndDraw : prints to screen using 'ncurses' and waits to control FPS
- *  |  +- tg_ClearScreen : flashes buffer
- *  |  +- tg_DrawFPS(float x, float y) : actual fps
- *  |  +- tg_DrawText(char* str, float x, float y)
- *  |  +- tg_DrawLine(Vector2 src, Vector2 dst)
- *  |  +- tg_DrawTriangle(Vector2 dot1, Vector2 dot2, Vector2 dot3);
- *  |  +- tg_DrawRectangleRec(Rectangle rec)
- *  |  +- tg_GetTime : returns time in milliseconds
- *  |  +- tg_GetScreenHeight
- *  |  +- tg_GetScreenWidth
- *
+ *     +- Game fps that set by tg_SetFPS() proc
+ *     +- Actual fps of game (limited by IO delays, game loop slow down etc)
+ *  
  *
  *  How Does It work?
- *  +- Draw functions write arbitrary numbers to buffers, then when printing check happens
- *  |  +- If text is being drawn ascii char is stored as buf[idx] value 
- *  +- Printing
- *  |  +- if buf[idx]==1 print '#'
- *  |  |  else if buf[idx]==0 print ' '
- *  |  |  else print buf[idx]
- *  |  |
- *  |  +- This is made for printing text like in 'tg_DrawFPS' or 'tg_DrawText'
- *  |
- *  +-  
 */
 
 
@@ -72,10 +46,21 @@ typedef struct Rectangle {
     float height;           // Rectangle height
 } Rectangle;
 
+enum PixelType {ASCII, TEXTURE};
+
+typedef struct Pixel {
+    union {
+        char letter;
+        int id;
+    };
+    enum PixelType type;
+} Pixel;
+
 typedef struct Screen {
     uint32_t width, height;
-    uint8_t *screen;
+    Pixel *screen;
 } Screen;
+
 typedef struct Game {
     float fps;
     uint32_t act_fps;
@@ -83,7 +68,6 @@ typedef struct Game {
 
     uint64_t time_old;
 } Game;
-
 void tg_InitScreen(int32_t width, int32_t height); // Initialising library
 void tg_SetFPS(float fps); // Set FPS program will slow up to
 float tg_GetFPS(void); // Get actual FPS
@@ -115,7 +99,7 @@ void tg_InitScreen(int32_t width, int32_t height){
     screen.height = height;
     game.time_old = tg_GetTime();
     game.fps = 30;
-    screen.screen = malloc(width*height*sizeof(uint8_t));
+    screen.screen = malloc(width*height*sizeof(*screen.screen));
     refresh();
 }
 
@@ -137,16 +121,17 @@ void tg_EndDraw(void){
     for(uint32_t y=0; y<screen.height; y++){
         move(y, 0);
         for(uint32_t x=0; x<screen.width; x++){
-            char currcell = screen.screen[y*screen.width + x];
-            switch (currcell){
+            Pixel currcell = screen.screen[y*screen.width + x];
+            if(currcell.type == ASCII){
+                addch(currcell.letter);
+                continue;
+            }
+            switch(currcell.id){
                 case 1:
                     addch('#');
                     break;
-                case 0:
-                    addch(' ');
-                    break;
                 default:
-                    addch(currcell);
+                    addch(' ');
             }
         }
     }
@@ -165,7 +150,8 @@ float tg_GetScreenWidth(void){return screen.width; }
 
 void tg_ClearScreen(void){
     for(uint32_t i=0; i<screen.width*screen.height; i++){
-        screen.screen[i]=0;
+        screen.screen[i].type=TEXTURE;
+        screen.screen[i].id=0;
     }
 }
 
@@ -181,13 +167,15 @@ bool tg_Exit(void){
 void tg_DrawFPS(float x, float y){
     sprintf(game.act_fps_cstr, "FPS: %d", game.act_fps);
     for(int i=0; game.act_fps_cstr[i]!=0; i++){
-        screen.screen[(int)(floor(y*screen.width)+floor(x)+i)] = game.act_fps_cstr[i];
+        screen.screen[(int)(floor(y*screen.width)+floor(x)+i)].type = ASCII;
+        screen.screen[(int)(floor(y*screen.width)+floor(x)+i)].letter = game.act_fps_cstr[i];
     }
 }
 
 void tg_DrawText(char *str, float x, float y){
     for(int i=0; str[i]!=0; i++){
-        screen.screen[(int)(round(y)*screen.width+round(x)+i)] = str[i];
+        screen.screen[(int)(round(y)*screen.width+round(x)+i)].type = ASCII;
+        screen.screen[(int)(round(y)*screen.width+round(x)+i)].letter = str[i];
     }
 }
 
@@ -219,7 +207,8 @@ void tg_DrawLine(Vector2 src, Vector2 dst){
             unsigned int tempy = floor(py)*screen.width;
             unsigned int tempx = floor(px);
             if(px>screen.width || py > screen.height || px<0 || py < 0){continue;}
-            screen.screen[tempx+tempy]=1;
+            screen.screen[tempx+tempy].type=TEXTURE;
+            screen.screen[tempx+tempy].id=1;
         }
     } else {
         slope=(float)dx / (float)dy;
@@ -229,7 +218,8 @@ void tg_DrawLine(Vector2 src, Vector2 dst){
             unsigned int tempy = floor(py)*screen.width;
             unsigned int tempx = floor(px);
             if(px>screen.width || py > screen.height || px<0 || py < 0){continue;}
-            screen.screen[tempx+tempy]=1;
+            screen.screen[tempx+tempy].type=TEXTURE;
+            screen.screen[tempx+tempy].id=1;
         }
     }
 }
